@@ -41,15 +41,17 @@ def renommage_files(csv):
     Fonction qui renomme les items
     :param csv: nom du fichier contenant les métadonnées
     """
-    df = pd.read_csv(csv)
+    df = pd.read_csv(csv, sep=",")
     for el in os.listdir("test_PDF"):
         ligne_MD = df[df['nom pdf']==el]
-        print(ligne_MD)
-        print(ligne_MD['item'])
+        annee = ligne_MD.iloc[0]['annee']
+        mois = ligne_MD.iloc[0]['mois']
+        mois = f'{mois:02d}'
+        num_item = ligne_MD.iloc[0]['item']
+        num_item = f'{num_item:04d}'
         ### problème dans la récupération des items
         nom = "/CR_"+str(annee)+"_"+str(mois)+"_"+str(num_item)+".pdf"
-        print(nom)
-        os.rename(dir + "/" + el, dir + nom)
+        os.rename("test_PDF/" + el, 'test_PDF'+ nom)
 
 def dispatch_PDF(dir):
     """
@@ -57,7 +59,7 @@ def dispatch_PDF(dir):
     :param dir: chemin vers le dossier lot
     :return:
     """
-
+    
 
 
 def windows2unix(dir):
