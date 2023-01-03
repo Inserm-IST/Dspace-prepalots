@@ -1,0 +1,47 @@
+03/01/2022
+Procédure de création des items pour batch import dans iPubli
+Produite par Juliette Janes (IST) pour le programme prepalots.py (générique utilisable pour toute collection Dspace)
+
+
+Programme utilisable à la suite du programme csv2XML.py qui créé des dossiers items ainsi que les fichiers XML Dublin Core contenant les métadonnées de chaque 
+document
+
+En entrée:
+
+Organiser le dossier de travail:
+	Récupérer le dossier de travail dans github: https://github.com/Inserm-IST/Dspace-prepalots
+
+Ajouter dans le dossier de travail le dossier contenant les pdf à traiter et les dossiers lots si ils ont déjà été construits (voir le dossier exemple).
+
+Créer un csv contenant les métadonnées des fichiers à ajouter dans iPubli:
+	Chaque ligne correspond aux métadonnées d'un fichier et chaque colonne à un type de métadonnées.
+	Pour créer le csv rapidement, employer le script python creationcsvdossier: python creationcsvdossier.py [Nom_Dossier_PDF]
+	Se référer au csv dans le dossier Exemple pour réaliser le reste du fichier csv:
+		- Ajouter une colonne item qui numérote les pdf à partir de 1
+		- Ajouter une colonne annee et une colonne mois
+	Bien enregistrer le fichier en format csv avec comme caractères de séparation "," et l'ajouter dans le dossier de travail
+
+
+
+Lancement du programme
+Dans Anaconda prompt, naviguer jusqu'au dossier de travail: cd chemin/vers/le/dossier
+
+	Pour une 1ere utilisation: 
+		Créer un environnement virtuel : conda create -n nom_env_virtuel python=3.8
+		Activer l'environnement virtuel : conda activate nom_env_virtuel
+		Installer les librairies : pip3 install -r requirements.txt
+	Par la suite, il est uniquement nécessaire d'activer l'environnement virtuel: conda activate nom_env_virtuel
+
+	Pour générer les lots sans options:
+		python prepalots.py [nom_du_csv] [nom_de_la_collection] 
+		Avec nom_du_csv: nom du fichier csv à traiter
+		     nom_de_la_collection: sera employé pour renommer les PDF. Exemple CP pour renommer les communiqués de presse...
+	
+	Pour générer les lots avec une licence (dans le cadre des comités histoire)
+		python prepalots.py [nom_du_csv] [nom_de_la_collection] -l
+	
+	Pour générer les lots avec un tri des dossiers items dans des dossiers "catégories"
+		python prepalots.py [nom_du_csv] [nom_de_la_collection] -t
+
+	Pour générer les lots avec des dossiers catégories et une licence
+		python prepalots.py [nom_du_csv] [nom_de_la_collection] -l -t
