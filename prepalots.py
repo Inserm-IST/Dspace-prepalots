@@ -11,6 +11,8 @@ from lxml import etree
 import os
 import click
 import pandas as pd
+import sys
+import shutil
 
 def creation_metadata(dir):
     """
@@ -36,30 +38,70 @@ def creation_metadata(dir):
     racine.write(dir + "/metadata_inserm.xml", encoding="utf-8")
 
 
-def renommage_files(csv):
+def renommage_files(csv,coll):
     """
-    Fonction qui renomme les items
+    Fonction qui renomme les pdf dans une version normée NomCollection_annee_mois_numérod'item.pdf
     :param csv: nom du fichier contenant les métadonnées
+    :type param: str
+    :param coll: nom abrégé de la collection traitée, correspond au NomCollection dans le nom des pdf
+    :type coll: str
+    :return: pdf renommés et csv avec une nouvelle colonne correspondant à ce nouveau nom
     """
+    # lecture du csv métadonnées
     df = pd.read_csv(csv, sep=",")
-    for el in os.listdir("test_PDF"):
-        ligne_MD = df[df['nom pdf']==el]
-        annee = ligne_MD.iloc[0]['annee']
-        mois = ligne_MD.iloc[0]['mois']
-        mois = f'{mois:02d}'
-        num_item = ligne_MD.iloc[0]['item']
-        num_item = f'{num_item:04d}'
-        ### problème dans la récupération des items
-        nom = "/CR_"+str(annee)+"_"+str(mois)+"_"+str(num_item)+".pdf"
-        os.rename("test_PDF/" + el, 'test_PDF'+ nom)
+    # pour chaque fichier pdf du dossier pdf
+    for el in os.listdir("PDF"):
+        # on récupère la ligne correspondant au fichier dans le csv
+        ligne_MD = df[df['nom_pdf']==el]
+        # si la ligne est vide on la passe
+        if ligne_MD.empty:
+            print(" > Les PDF sont déjà renommés")
+        else:
+            # sinon on récupère l'année, le mois et le numéro d'item du fichier
+            annee = int(ligne_MD.iloc[0]['annee'])
+            mois = int(ligne_MD.iloc[0]['mois'])
+            mois = f'{mois:02d}'
+            num_item = int(ligne_MD.iloc[0]['item'])
+            num_item_propre = f'{num_item:04d}'
+            ### on créé le nouveau nom du document
+            nom = f'/{coll}_{annee}_{mois}_{num_item_propre}.pdf'
+            # on renomme le document
+            os.rename("PDF/" + el, 'PDF' + nom)
+            # on ajoute le nouveau nom dans le csv
+            df.at[num_item - 1, 'nv_nom_pdf'] = nom
+    #on imprime la nouvelle colonne dans le fichier csv
+    df.to_csv(csv)
 
-def dispatch_PDF(dir):
+def create_lots(df_line, thematique):
+    """Fonction qui créé des lots pour import dans iPubli par la suite"""
+    num_item = f'{df_line["item"]:04d}'
+    if thematique:
+        path = f'Lots/{df_line["categorie"]}/item{num_item}'
+    else:
+        path = f'Lots/item_{num_item}'
+    isExist = os.path.exists(path)
+    if not isExist:
+        os.makedirs(path)
+    # renvoi du chemin obtenu
+    return path
+
+
+def dispatch_PDF(csv, thematique):
     """
     fonction qui dispatch les PDF dans le lot correspondant
-    :param dir: chemin vers le dossier lot
-    :return:
+    :param csv: csv contenant les métadonnées des documents traités
+    :type csv: str
     """
-    
+    df = pd.read_csv(csv, sep=",")
+    for n in range(len(df)):
+        df_line = df.iloc[n]
+        path = create_lots(df_line, thematique)
+        nom_pdf = df_line["nv_nom_pdf"]
+        try:
+            os.rename(f'PDF{nom_pdf}', f'{path}{nom_pdf}')
+        except FileNotFoundError as e:
+            print(e)
+            print(f"Le fichier PDF{nom_pdf} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
 
 
 def windows2unix(dir):
@@ -105,28 +147,55 @@ def creation_content(dir):
     # mobilisation de la fonction windows2unix qui permet d'encoder le fichier contents en unix
     windows2unix(dir)
 
+def copy_license():
+    """
+    Fonction qui ajoute la license à chaque item
+    """
+    for el in os.listdir("Lots"):
+        shutil.copy("license.txt", "Lots/"+el+"/license.txt")
+
 
 @click.command()
-@click.argument("dossier", type=str)
 @click.argument("csv", type=str)
-def automate_file(dossier, csv):
+@click.argument("coll", type=str)
+@click.option("-l","--lic","license", is_flag=True, default=False, help="Ajout de la license du Comité Histoire")
+@click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
+def automate_file(csv,coll,license, thematique):
     """
     """
     # on lance le renommage des fichiers avec la fonction renommage_files
-    renommage_files(csv)
+    print(" > Renommage des PDF")
+    renommage_files(csv,coll)
     # pour chaque lot dans le dossier
-    for item in os.listdir(dossier):
-        # on stocke le chemin vers le lot traité
-        dir = dossier + "/" + item+"/"
-        # on indique à l'utilisateur le traitement du lot
-        print("Traitement du lot " + item)
-        # on dispatche les PDF dans les lots correspondants
-        dispatch_PDF(dir)
-        # création du  fichier métadata en mobilisant la fonction creation_metadata
-        creation_metadata(dir)
-        # création du fichier content en mobilisant la fonction creation_content
-        creation_content(dir)
+    dispatch_PDF(csv, thematique)
+    print(" > Ajout des PDF dans leur dossier item")
+    # Si il y a des images à ajouter, on demande à l'utilisateur et on arrête le programme
+    imgs = input(
+        "Avez-vous des images à ajouter dans les dossiers item? Oui/Non\n")
+    if imgs == "Oui":
+        print("""Le programme va s'arrêter pour vous laisser le temps d'ajouter les images dans les dossiers item.\n
+        Relancez le programme lorsque ce travail aura été effectué."""
+              )
+        sys.exit()
+    else:
+        # sinon on lance la suite
+        for dir in os.listdir("Lots"):
+            dir = f'Lots/{dir}'
+            # création du  fichier métadata en mobilisant la fonction creation_metadata
+            creation_metadata(dir)
 
+            # création du fichier content en mobilisant la fonction creation_content
+            creation_content(dir)
+        print(" > Ajout des fichiers metadata et content")
+        print(""" > Les items sont récupérables dans le dossier Lots. \n
+                                - Renommage des PDF
+                                - Création des dossiers items si non existants
+                                - Ajout des PDF dans le dossier item correspondant
+                                - Ajout des fichiers metadata et contents 
+                        """)
+    # Si une license est demandée, on l'ajoute dans chaque item
+    if license:
+        copy_license()
 
 
 if __name__ == "__main__":
