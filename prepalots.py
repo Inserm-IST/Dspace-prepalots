@@ -126,11 +126,13 @@ def windows2unix(dir):
         open_file.write(content)
 
 
-def creation_content(dir):
+def creation_content(dir, license):
     """
     Fonction qui récupère les éléments présents dans le dossier et créé le fichier content à partir de ceux-ci
     :param dir: chemin vers le dossier lot
     :type dir: str
+    :param license: bool qui indique si la licence des comités d'histoire sera présente dans les lots
+    :type license: bool
     :return: fichier content détaillant le contenu du lot
     """
     # pour chaque fichier du dossier
@@ -144,7 +146,9 @@ def creation_content(dir):
         elif "jpg" in el or "jpeg" in el or "png" in el:
             with open(dir+"/contents","a") as f:
                 f.write(el+"\n")
-        f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
+        if license:
+            with open(dir+"/contents", "a") as f:
+                f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
     # mobilisation de la fonction windows2unix qui permet d'encoder le fichier contents en unix
     windows2unix(dir)
 
@@ -163,6 +167,11 @@ def copy_license():
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
 def automate_file(csv,coll,license, thematique):
     """
+    Script qui permet la construction d'un lot de document pour import dans Dspace
+    :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
+    numéro d'item, mois et année de parution)
+    :type csv: str
+    :param coll: 
     """
     # on lance le renommage des fichiers avec la fonction renommage_files
     print(" > Renommage des PDF")
@@ -186,7 +195,7 @@ def automate_file(csv,coll,license, thematique):
             creation_metadata(dir)
 
             # création du fichier content en mobilisant la fonction creation_content
-            creation_content(dir)
+            creation_content(dir, license)
         print(" > Ajout des fichiers metadata et content")
         print(""" > Les items sont récupérables dans le dossier Lots. \n
                                 - Renommage des PDF
