@@ -140,10 +140,11 @@ def creation_content(dir):
             # on ouvre le fichier content
             with open(dir+"/contents", "a") as f:
                 # on ajoute le nom du fichier avec sa description
-                f.write(el+"\t\tdescription:Lire l'article PDF\n")
+                f.write(el+"\t\tbundle:ORIGINAL\t\tdescription:Lire l'article PDF\n")
         elif "jpg" in el or "jpeg" in el or "png" in el:
             with open(dir+"/contents","a") as f:
                 f.write(el+"\n")
+        f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
     # mobilisation de la fonction windows2unix qui permet d'encoder le fichier contents en unix
     windows2unix(dir)
 
