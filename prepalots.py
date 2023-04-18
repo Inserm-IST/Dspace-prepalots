@@ -161,29 +161,59 @@ def copy_license():
 
 
 @click.command()
-@click.argument("csv", type=str)
-@click.argument("coll", type=str)
+@click.option("csv", type=str)
+@click.option("coll", type=str)
 @click.option("-l","--lic","license", is_flag=True, default=False, help="Ajout de la license du Comité Histoire")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
-@click.option("-p", "--pdf", "texte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
+@click.option("-p", "--pdf", "dispatchtexte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
 @click.option("-r", "--rename", "renamefiles", is_flag=True, default=False, help="si on veut renommer les fichiers")
-@click.option("-i", "--img","images", is_flag=True, default=False, help="si on veut dispatcher des images")
+@click.option("-i", "--img","dispatchimages", is_flag=True, default=False, help="si on veut dispatcher des images")
 @click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
-def automate_file(csv,coll,license, thematique):
+def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimages, contentcreation):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
     :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
     numéro d'item, mois et année de parution)
     :type csv: str
-    :param coll: 
+    :param coll: nom de la collection des documents traités
+    :type coll: str
+    Ces deux éléments sont nécessaires si l'on renommer les fichiers et dispatcher les pdf dans les lots.
+    :param license: indication click si l'on souhaite l'ajout de la licence aux items
+    :param thematique: indication click si l'on souhaite la structuration des dossiers items en dossiers thématiques
+    :param dispatchtexte: indication click si l'on souhaite dispatcher dans chaque lot le pdf correspondant
+    :param renamefiles: indication click si l'on souhaite renommer les fichiers et items
+    :param dispatchimages: indication click si l'on souhaite dispatcher dans chaque lot une image
+    :param contentcreation: indication click si l'on souhaite créer le content dans chaque lot
     """
-    # on lance le renommage des fichiers avec la fonction renommage_files
-    print(" > Renommage des PDF")
-    renommage_files(csv,coll)
-    # pour chaque lot dans le dossier
-    dispatch_PDF(csv, thematique)
-    print(" > Ajout des PDF dans leur dossier item")
+    if renamefiles:
+        if csv and coll:
+        # on lance le renommage des fichiers avec la fonction renommage_files
+            print(" > Renommage des PDF")
+            renommage_files(csv,coll)
+        elif csv:
+            print("Il manque l'indication de collection pour renommer correctement les fichiers. Relancer la commande en "
+                  "y ajoutant la collection traitée.")
+        elif coll:
+            print("Il manque le csv de métadonnées permettant de renommer les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
+        else:
+            print("Il manque l'indication de collection et le csv de métadonnées pour renommer correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
 
+
+    if dispatchtexte:
+        if csv and coll:
+            # on lance le renommage des fichiers avec la fonction renommage_files
+            print(" > Ajout des PDF dans leur dossier item")
+            dispatch_PDF(csv, thematique)
+        elif csv:
+            print("Il manque l'indication de collection pour renommer correctement les fichiers. Relancer la commande en "
+                  "y ajoutant la collection traitée.")
+        elif coll:
+            print("Il manque le csv de métadonnées permettant de renommer les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
+        else:
+            print("Il manque l'indication de collection et le csv de métadonnées pour renommer correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
+
+
+    # pour chaque lot dans le dossier
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
         # création du  fichier métadata en mobilisant la fonction creation_metadata
@@ -200,6 +230,7 @@ def automate_file(csv,coll,license, thematique):
                     """)
     # Si une license est demandée, on l'ajoute dans chaque item
     if license:
+        print(" > Ajout des licences")
         copy_license()
 
 
