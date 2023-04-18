@@ -165,6 +165,10 @@ def copy_license():
 @click.argument("coll", type=str)
 @click.option("-l","--lic","license", is_flag=True, default=False, help="Ajout de la license du Comité Histoire")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
+@click.option("-p", "--pdf", "texte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
+@click.option("-r", "--rename", "renamefiles", is_flag=True, default=False, help="si on veut renommer les fichiers")
+@click.option("-i", "--img","images", is_flag=True, default=False, help="si on veut dispatcher des images")
+@click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
 def automate_file(csv,coll,license, thematique):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
@@ -179,30 +183,21 @@ def automate_file(csv,coll,license, thematique):
     # pour chaque lot dans le dossier
     dispatch_PDF(csv, thematique)
     print(" > Ajout des PDF dans leur dossier item")
-    # Si il y a des images à ajouter, on demande à l'utilisateur et on arrête le programme
-    imgs = input(
-        "Avez-vous des images à ajouter dans les dossiers item? Oui/Non\n")
-    if imgs == "Oui":
-        print("""Le programme va s'arrêter pour vous laisser le temps d'ajouter les images dans les dossiers item.\n
-        Relancez le programme lorsque ce travail aura été effectué."""
-              )
-        sys.exit()
-    else:
-        # sinon on lance la suite
-        for dir in os.listdir("Lots"):
-            dir = f'Lots/{dir}'
-            # création du  fichier métadata en mobilisant la fonction creation_metadata
-            creation_metadata(dir)
 
-            # création du fichier content en mobilisant la fonction creation_content
-            creation_content(dir, license)
-        print(" > Ajout des fichiers metadata et content")
-        print(""" > Les items sont récupérables dans le dossier Lots. \n
-                                - Renommage des PDF
-                                - Création des dossiers items si non existants
-                                - Ajout des PDF dans le dossier item correspondant
-                                - Ajout des fichiers metadata et contents 
-                        """)
+    for dir in os.listdir("Lots"):
+        dir = f'Lots/{dir}'
+        # création du  fichier métadata en mobilisant la fonction creation_metadata
+        creation_metadata(dir)
+
+        # création du fichier content en mobilisant la fonction creation_content
+        creation_content(dir, license)
+    print(" > Ajout des fichiers metadata et content")
+    print(""" > Les items sont récupérables dans le dossier Lots. \n
+                            - Renommage des PDF
+                            - Création des dossiers items si non existants
+                            - Ajout des PDF dans le dossier item correspondant
+                            - Ajout des fichiers metadata et contents 
+                    """)
     # Si une license est demandée, on l'ajoute dans chaque item
     if license:
         copy_license()
