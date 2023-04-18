@@ -217,17 +217,12 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
         # création du  fichier métadata en mobilisant la fonction creation_metadata
+        print(" > Ajout des fichiers metadata")
         creation_metadata(dir)
-
-        # création du fichier content en mobilisant la fonction creation_content
-        creation_content(dir, license)
-    print(" > Ajout des fichiers metadata et content")
-    print(""" > Les items sont récupérables dans le dossier Lots. \n
-                            - Renommage des PDF
-                            - Création des dossiers items si non existants
-                            - Ajout des PDF dans le dossier item correspondant
-                            - Ajout des fichiers metadata et contents 
-                    """)
+        if contentcreation:
+            print(" > Ajout des fichiers content")
+            # création du fichier content en mobilisant la fonction creation_content
+            creation_content(dir, license)
     # Si une license est demandée, on l'ajoute dans chaque item
     if license:
         print(" > Ajout des licences")
