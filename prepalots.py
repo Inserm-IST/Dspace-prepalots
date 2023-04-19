@@ -90,7 +90,8 @@ def create_lots(df_line, thematique):
     return path
 
 
-def dispatch_PDF(csv, thematique):
+
+def dispatch_files(csv, thematique, dispatchPDF, dispatchimgs):
     """
     fonction qui dispatch les PDF dans le lot correspondant
     :param csv: csv contenant les métadonnées des documents traités
@@ -100,12 +101,22 @@ def dispatch_PDF(csv, thematique):
     for n in range(len(df)):
         df_line = df.iloc[n]
         path = create_lots(df_line, thematique)
-        nom_pdf = df_line["nv_nom_pdf"]
-        try:
-            os.rename(f'PDF{nom_pdf}', f'{path}{nom_pdf}')
-        except FileNotFoundError as e:
-            print(e)
-            print(f"Le fichier PDF{nom_pdf} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
+        if dispatchPDF:
+            print(" > Ajout des PDF dans le fichier item correspondant")
+            nom_pdf = df_line["nv_nom_pdf"]
+            nom_image = df_line["nom_pdf"]
+            try:
+                os.rename(f'PDF{nom_pdf}', f'{path}{nom_pdf}')
+            except FileNotFoundError as e:
+                print(e)
+                print(f"Le fichier PDF{nom_pdf} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
+        if dispatchimgs:
+            print(" > Ajout des images jpg dans le fichier item correspondant")
+            try:
+                os.rename(f'imgs/{nom_image[:-4]}.jpg',f'{path}/{nom_image[:-4]}.jpg')
+            except FileNotFoundError as e:
+                print(e)
+                print(f"Le fichier images {nom_image[:-4]}.jpg n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
 
 
 def windows2unix(dir):
@@ -220,18 +231,18 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
             print("Il manque l'indication de collection et le csv de métadonnées pour renommer correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
 
 
-    if dispatchtexte:
+    if dispatchtexte or dispatchimages:
         if csv and coll:
             # on lance le renommage des fichiers avec la fonction renommage_files
-            print(" > Ajout des PDF dans leur dossier item")
-            dispatch_PDF(csv, thematique)
+            print(" > Dispatchage des fichiers dans leur dossier item")
+            dispatch_files(csv, thematique,dispatchtexte, dispatchimages)
         elif csv:
-            print("Il manque l'indication de collection pour renommer correctement les fichiers. Relancer la commande en "
+            print("Il manque l'indication de collection pour dispatcher correctement les fichiers. Relancer la commande en "
                   "y ajoutant la collection traitée.")
         elif coll:
-            print("Il manque le csv de métadonnées permettant de renommer les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
+            print("Il manque le csv de métadonnées permettant de dispatcher les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
         else:
-            print("Il manque l'indication de collection et le csv de métadonnées pour renommer correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
+            print("Il manque l'indication de collection et le csv de métadonnées pour dispatcher correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
 
 
     # pour chaque lot dans le dossier
