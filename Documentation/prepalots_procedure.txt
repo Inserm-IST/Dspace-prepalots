@@ -2,17 +2,22 @@
 Procédure de création des items pour batch import dans iPubli
 Produite par Juliette Janes (IST) pour le programme prepalots.py (générique utilisable pour toute collection Dspace)
 
+Mise à jour 19/04/2023
 
 Programme utilisable à la suite du programme csv2XML.py qui créé des dossiers items ainsi que les fichiers XML Dublin Core contenant les métadonnées de chaque 
 document
+Création des dossiers lots et ajout des éléments metadata, content, license, pdf et/ou images. Chacune de ces manipulations peut être réalisée seule avec ce programme
+ou couplée à d'autres avec le jeu des options dans la commande de lancement du fichier python.
 
 En entrée:
 
 Organiser le dossier de travail:
 	Récupérer le dossier de travail dans github: https://github.com/Inserm-IST/Dspace-prepalots
 
-Ajouter dans le dossier de travail le dossier contenant les pdf à traiter et les dossiers lots si ils ont déjà été construits (voir le dossier exemple).
+Ajouter dans le dossier de travail le dossier contenant les fichiers à dispatcher si il y en a (PDF et images dans des dossiers PDF et imgs)
+ et les dossiers lots si ils ont déjà été construits (se référer au dossier Exemple).
 
+Si l'on souhaite dispatcher des PDF et/ou des images dans les lots, il est nécessaire de créer un csv:
 Créer un csv contenant les métadonnées des fichiers à ajouter dans iPubli:
 	Chaque ligne correspond aux métadonnées d'un fichier et chaque colonne à un type de métadonnées.
 	Pour créer le csv rapidement, employer le script python creationcsvdossier: python creationcsvdossier.py [Nom_Dossier_PDF]
@@ -32,16 +37,21 @@ Dans Anaconda prompt, naviguer jusqu'au dossier de travail: cd chemin/vers/le/do
 		Installer les librairies : pip3 install -r requirements.txt
 	Par la suite, il est uniquement nécessaire d'activer l'environnement virtuel: conda activate nom_env_virtuel
 
-	Pour générer les lots sans options:
-		python prepalots.py [nom_du_csv] [nom_de_la_collection] 
+	Une commande simple du type python prepalots.py ne donnera en effet rien, il est nécessaire de lui accoler des options (qui commence par un tiret)
+afin de faire comprendre à la machine ce que l'on souhaite faire. Il est possible d'employer une option seule, par exemple si l'on souhaite uniquement
+créer des fichiers contents sur un lot déjà fait (python prepalots.py -c) ou bien associer différentes options pour obtenir un lot d'items complets en fonction
+de la collection que l'on souhaite créer.
+Le tableur prepalots_options liste les différentes options qui existent avec les indications d'utilisation. Se référer à lui pour construire la commande 
+à lancer en fonction de ce que l'on souhaite obtenir.
+
+Plusieurs exemples de commandes en fonction des collections:
+
+	Commande pour générer un lot d'item avec PDF, images, metadata_inserm, content avec renommage des pdf:
+		python prepalots.py --coll=[nom_de_la_collection] --csv=[nom_du_csv] -p -c -i -r -m
 		Avec nom_du_csv: nom du fichier csv à traiter
 		     nom_de_la_collection: sera employé pour renommer les PDF. Exemple CP pour renommer les communiqués de presse...
-	
-	Pour générer les lots avec une licence (dans le cadre des comités histoire)
-		python prepalots.py [nom_du_csv] [nom_de_la_collection] -l
-	
-	Pour générer les lots avec un tri des dossiers items dans des dossiers "catégories"
-		python prepalots.py [nom_du_csv] [nom_de_la_collection] -t
 
-	Pour générer les lots avec des dossiers catégories et une licence
-		python prepalots.py [nom_du_csv] [nom_de_la_collection] -l -t
+	Commande pour générer un lot d'item avec PDF, metadata_inserm, content et catégories (thématique):
+		python prepalots.py --coll=[nom_de_la_collection] --csv=[nom_du_csv] -p -c -t -m
+		Avec nom_du_csv: nom du fichier csv à traiter
+		     nom_de_la_collection: sera employé pour renommer les PDF. Exemple CP pour renommer les communiqués de presse...
