@@ -14,7 +14,7 @@ import pandas as pd
 import sys
 import shutil
 
-def creation_metadata(dir):
+def creation_metadata(dir, thematique):
     """
     Fonction qui ajoute le fichier métadata au dossier traité
     :param dir: chemin vers le dossier lot
@@ -35,7 +35,11 @@ def creation_metadata(dir):
     # on transforme la balise racine en un arbre XML
     racine = etree.ElementTree(racine)
     # on imprime l'arbre XML racine dans un fichier metadata.xml dans le dossier lot traité
-    racine.write(dir + "/metadata_inserm.xml", encoding="utf-8")
+    if thematique:
+        for dir_them in os.listdir(dir):
+            racine.write(f'{dir}/{dir_them}/metadata_inserm.xml', encoding="utf-8")
+    else:
+        racine.write(dir + "/metadata_inserm.xml", encoding="utf-8")
 
 
 def renommage_files(csv,coll):
@@ -126,43 +130,60 @@ def windows2unix(dir):
         open_file.write(content)
 
 
-def creation_content(dir, license):
+def construction_content(dir,license):
     """
-    Fonction qui récupère les éléments présents dans le dossier et créé le fichier content à partir de ceux-ci
-    :param dir: chemin vers le dossier lot
-    :type dir: str
-    :param license: bool qui indique si la licence des comités d'histoire sera présente dans les lots
-    :type license: bool
-    :return: fichier content détaillant le contenu du lot
+    Fonction qui pour un dossier item donné construit le fichier content correspondant
+    :param dir: chemin vers le dossier
+    :return:
     """
     # pour chaque fichier du dossier
     for el in os.listdir(dir):
         # si le fichier traité est le pdf de l'article
         if "pdf" in el:
             # on ouvre le fichier content
-            with open(dir+"/contents", "a") as f:
+            with open(dir + "/contents", "a") as f:
                 # on ajoute le nom du fichier avec sa description
-                f.write(el+"\t\tbundle:ORIGINAL\t\tdescription:Lire l'article PDF\n")
+                f.write(el + "\t\tbundle:ORIGINAL\t\tdescription:Lire l'article PDF\n")
         elif "jpg" in el or "jpeg" in el or "png" in el:
-            with open(dir+"/contents","a") as f:
-                f.write(el+"\n")
+            with open(dir + "/contents", "a") as f:
+                f.write(el + "\n")
         if license:
-            with open(dir+"/contents", "a") as f:
+            with open(dir + "/contents", "a") as f:
                 f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
     # mobilisation de la fonction windows2unix qui permet d'encoder le fichier contents en unix
     windows2unix(dir)
 
-def copy_license():
+
+def creation_content(dir, license, thematique):
+    """
+    Fonction qui pour chaque dossier item construit le fichier content et l'ajoute au bon niveau de l'arborescence
+    :param dir: chemin vers le dossier lot
+    :type dir: str
+    :param license: bool qui indique si la licence des comités d'histoire sera présente dans les lots
+    :type license: bool
+    :return: fichier content détaillant le contenu du lot
+    """
+    if thematique:
+        for dir_item in os.listdir(dir):
+            construction_content(f'{dir}/{dir_item}',license)
+    else:
+        construction_content(dir,license)
+
+
+def copy_license(dir,thematique):
     """
     Fonction qui ajoute la license à chaque item
     """
-    for el in os.listdir("Lots"):
-        shutil.copy("license.txt", "Lots/"+el+"/license.txt")
+    if thematique:
+        for dir_them in os.listdir(dir):
+            shutil.copy("license.txt", f'{dir}/{dir_them}/license.txt')
+    else:
+        shutil.copy("license.txt", f'{dir}/license.txt')
 
 
 @click.command()
-@click.option("csv", type=str)
-@click.option("coll", type=str)
+@click.option("--coll", type=str)
+@click.option("--csv", type=str)
 @click.option("-l","--lic","license", is_flag=True, default=False, help="Ajout de la license du Comité Histoire")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
 @click.option("-p", "--pdf", "dispatchtexte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
@@ -218,15 +239,15 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
         dir = f'Lots/{dir}'
         # création du  fichier métadata en mobilisant la fonction creation_metadata
         print(" > Ajout des fichiers metadata")
-        creation_metadata(dir)
+        creation_metadata(dir, thematique)
         if contentcreation:
             print(" > Ajout des fichiers content")
             # création du fichier content en mobilisant la fonction creation_content
-            creation_content(dir, license)
-    # Si une license est demandée, on l'ajoute dans chaque item
-    if license:
-        print(" > Ajout des licences")
-        copy_license()
+            creation_content(dir, license, thematique)
+        # Si une license est demandée, on l'ajoute dans chaque item
+        if license:
+            print(" > Ajout des licences")
+            copy_license(dir, thematique)
 
 
 if __name__ == "__main__":
