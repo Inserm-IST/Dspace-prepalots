@@ -181,6 +181,17 @@ def creation_content(dir, license, thematique):
         construction_content(dir,license)
 
 
+def ajout_img(dir,thematique):
+    """
+    Fonction qui ajoute la même image à chaque item
+    """
+    if thematique:
+        for dir_them in os.listdir(dir):
+            shutil.copy("vignette.jpg", f'{dir}/{dir_them}/vignette.jpg')
+    else:
+        shutil.copy("vignette.jpg", f'{dir}/vignette.jpg')
+        
+
 def copy_license(dir,thematique):
     """
     Fonction qui ajoute la license à chaque item
@@ -200,8 +211,10 @@ def copy_license(dir,thematique):
 @click.option("-p", "--pdf", "dispatchtexte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
 @click.option("-r", "--rename", "renamefiles", is_flag=True, default=False, help="si on veut renommer les fichiers")
 @click.option("-i", "--img","dispatchimages", is_flag=True, default=False, help="si on veut dispatcher des images")
+@click.option("-is","--imgsingle","dispatchimageseul",is_flag=True, default=False, help="si l'on veut ajouter la même vignette dans chaque lot"
 @click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
-def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimages, contentcreation):
+@click.option("-m", "--metadata", "metadatacreation", is_flag=True, default=False, help="si l'on veut que le metadata_inserm soit ajouté")
+def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimages, dispatchimageseul, contentcreation, metadatacreation):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
     :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
@@ -214,8 +227,10 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
     :param thematique: indication click si l'on souhaite la structuration des dossiers items en dossiers thématiques
     :param dispatchtexte: indication click si l'on souhaite dispatcher dans chaque lot le pdf correspondant
     :param renamefiles: indication click si l'on souhaite renommer les fichiers et items
-    :param dispatchimages: indication click si l'on souhaite dispatcher dans chaque lot une image
+    :param dispatchimages: indication click si l'on souhaite dispatcher dans chaque lot une image différente
+    :param dispatchimageseul: indication click si l'on souhaite ajouter la même image dans tous les lots
     :param contentcreation: indication click si l'on souhaite créer le content dans chaque lot
+    :param metadatacreation: indication click si l'on souhaite créer un fichier metadata_inserm dans chaque lot
     """
     if renamefiles:
         if csv and coll:
@@ -248,9 +263,14 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
     # pour chaque lot dans le dossier
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
+        if dispatchimageseul:
+            print(" > Ajout de la vignette unique dans tous les lots")
+            ajout_img(dir, thematique)
         # création du  fichier métadata en mobilisant la fonction creation_metadata
         print(" > Ajout des fichiers metadata")
-        creation_metadata(dir, thematique)
+        if metadatacreation:
+            print(" > Ajout des fichier metadata_inserm")
+            creation_metadata(dir, thematique)
         if contentcreation:
             print(" > Ajout des fichiers content")
             # création du fichier content en mobilisant la fonction creation_content
