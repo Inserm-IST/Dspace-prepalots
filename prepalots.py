@@ -190,7 +190,7 @@ def ajout_img(dir,thematique):
             shutil.copy("vignette.jpg", f'{dir}/{dir_them}/vignette.jpg')
     else:
         shutil.copy("vignette.jpg", f'{dir}/vignette.jpg')
-        
+
 
 def copy_license(dir,thematique):
     """
@@ -211,7 +211,7 @@ def copy_license(dir,thematique):
 @click.option("-p", "--pdf", "dispatchtexte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
 @click.option("-r", "--rename", "renamefiles", is_flag=True, default=False, help="si on veut renommer les fichiers")
 @click.option("-i", "--img","dispatchimages", is_flag=True, default=False, help="si on veut dispatcher des images")
-@click.option("-is","--imgsingle","dispatchimageseul",is_flag=True, default=False, help="si l'on veut ajouter la même vignette dans chaque lot"
+@click.option("-is","--imgsingle","dispatchimageseul",is_flag=True, default=False, help="si l'on veut ajouter la même vignette dans chaque lot")
 @click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
 @click.option("-m", "--metadata", "metadatacreation", is_flag=True, default=False, help="si l'on veut que le metadata_inserm soit ajouté")
 def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimages, dispatchimageseul, contentcreation, metadatacreation):
@@ -264,10 +264,9 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
         if dispatchimageseul:
-            print(" > Ajout de la vignette unique dans tous les lots")
+            print(" > Ajout de la vignette unique")
             ajout_img(dir, thematique)
         # création du  fichier métadata en mobilisant la fonction creation_metadata
-        print(" > Ajout des fichiers metadata")
         if metadatacreation:
             print(" > Ajout des fichier metadata_inserm")
             creation_metadata(dir, thematique)
