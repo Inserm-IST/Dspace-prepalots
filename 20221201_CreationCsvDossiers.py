@@ -5,12 +5,12 @@ import click
 
 
 @click.command()
-@click.argument("dir", type=str)
+@click.argument("dossier", type=str)
 def get_pdf(dossier):
     """
     Fonction qui récupère les noms des différents PDF et les ajoute dans un csv
-    :param dir: nom du chemin vers les PDF
-    :type dir: str
+    :param dossier: nom du chemin vers les PDF
+    :type dossier: str
     :return:
     """
     liste_dir = []
@@ -18,7 +18,7 @@ def get_pdf(dossier):
     num_item = 0
     num_liste = []
     for dir in os.listdir(dossier):
-        pdf = os.listdir(dossier + dir)
+        pdf = os.listdir(f'{dossier}/{dir}')
         for el in pdf:
             print(el)
             if 'pdf' in el:
@@ -33,4 +33,4 @@ def get_pdf(dossier):
     print("le fichier pdf.csv est créé.")
 
 if __name__ == "__main__":
-    automate_file()
+    get_pdf()
