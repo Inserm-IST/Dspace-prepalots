@@ -82,7 +82,7 @@ def create_lots(df_line, thematique):
     """Fonction qui créé des lots pour import dans iPubli par la suite"""
     num_item = f'{df_line["item"]:04d}'
     if thematique:
-        path = f'Lots/{df_line["categorie"]}/item{num_item}'
+        path = f'Lots/{df_line["Date de publication"]}/item_{num_item}'
     else:
         path = f'Lots/item_{num_item}'
     isExist = os.path.exists(path)
@@ -110,7 +110,7 @@ def dispatchfiles(csv, thematique, renamefiles, dispatchPDF, dispatchimgs):
             else:
                 nom_pdf=df_line['nom_pdf']
             try:
-                os.rename(f'PDF/{nom_pdf}', f'{path}/{nom_pdf}')
+                shutil.copy(f'PDF/{nom_pdf}', f'{path}/{nom_pdf}')
             except FileNotFoundError as e:
                 print(e)
                 print(f"Le fichier PDF{nom_pdf} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
