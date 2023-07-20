@@ -86,7 +86,7 @@ def create_lots(df_line, thematique):
     return path
 
 
-def dispatch_PDF(csv, thematique):
+def dispatch_PDF(csv, thematique, renommage):
     """
     fonction qui dispatch les PDF dans le lot correspondant
     :param csv: csv contenant les métadonnées des documents traités
@@ -96,7 +96,10 @@ def dispatch_PDF(csv, thematique):
     for n in range(len(df)):
         df_line = df.iloc[n]
         path = create_lots(df_line, thematique)
-        nom_pdf = df_line["nv_nom_pdf"]
+        if renommage:
+            nom_pdf = df_line["nv_nom_pdf"]
+        else:
+            nom_pdf = df_line['nom_pdf']
         try:
             os.rename(f'PDF{nom_pdf}', f'{path}{nom_pdf}')
         except FileNotFoundError as e:
@@ -163,9 +166,10 @@ def copy_license():
 @click.command()
 @click.argument("csv", type=str)
 @click.argument("coll", type=str)
+@click.option("-r","--renom","renommage", is_flag=True, default=False, help="Renommage des pdfs et fichiers")
 @click.option("-l","--lic","license", is_flag=True, default=False, help="Ajout de la license du Comité Histoire")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
-def automate_file(csv,coll,license, thematique):
+def automate_file(csv,coll,renommage, license, thematique):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
     :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
@@ -173,11 +177,12 @@ def automate_file(csv,coll,license, thematique):
     :type csv: str
     :param coll: 
     """
-    # on lance le renommage des fichiers avec la fonction renommage_files
-    print(" > Renommage des PDF")
-    renommage_files(csv,coll)
+    if renommage:
+        # on lance le renommage des fichiers avec la fonction renommage_files
+        print(" > Renommage des PDF")
+        renommage_files(csv,coll)
     # pour chaque lot dans le dossier
-    dispatch_PDF(csv, thematique)
+    dispatch_PDF(csv, thematique, renommage)
     print(" > Ajout des PDF dans leur dossier item")
     # Si il y a des images à ajouter, on demande à l'utilisateur et on arrête le programme
     imgs = input(
