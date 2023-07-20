@@ -82,7 +82,7 @@ def create_lots(df_line, thematique):
     """Fonction qui créé des lots pour import dans iPubli par la suite"""
     num_item = f'{df_line["item"]:04d}'
     if thematique:
-        path = f'Lots/{df_line["Date de publication"]}/item_{num_item}'
+        path = f'Lots/{df_line["Thématique"]}/item_{num_item}'
     else:
         path = f'Lots/item_{num_item}'
     isExist = os.path.exists(path)
