@@ -94,6 +94,7 @@ def create_lots(df_line, thematique):
 
 
 def dispatchfiles(csv, thematique, renamefiles, dispatchPDF, dispatchimgs):
+
     """
     fonction qui dispatch les PDF dans le lot correspondant
     :param csv: csv contenant les métadonnées des documents traités
@@ -121,6 +122,7 @@ def dispatchfiles(csv, thematique, renamefiles, dispatchPDF, dispatchimgs):
             except FileNotFoundError as e:
                 print(e)
                 print(f"Le fichier images {nom_image[:-4]}.jpg n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
+
 
 
 def windows2unix(dir):
@@ -252,7 +254,6 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
             print("Il manque le csv de métadonnées permettant de renommer les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
         else:
             print("Il manque l'indication de collection et le csv de métadonnées pour renommer correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
-
 
     if dispatchtexte or dispatchimages:
         if renamefiles:
