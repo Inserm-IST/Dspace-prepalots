@@ -14,32 +14,34 @@ import pandas as pd
 import sys
 import shutil
 
-def creation_metadata(dir, thematique):
+def creation_metadata(thematique):
     """
     Fonction qui ajoute le fichier métadata au dossier traité
     :param dir: chemin vers le dossier lot
     :type dir: str
     :return: fichier XML nommé metadata qui paramètre Dspace pour la construction des métadonnées
     """
-    # on créé une balise XML racine nommé dublin_core avec pour attribut schema qui a une valeur inserm
-    racine = etree.Element("dublin_core", schema="inserm")
-    # on associe à cette balise une sous balise dc_value avec pour attribut language (valeur autocreation) et element
-    # (valeur lexicon)
-    langage1 = etree.SubElement(racine,"dcvalue", language="",qualifier="autocreation", element="lexicon")
-    # on ajoute le texte true encadrée par la balise language précédemment créée
-    langage1.text="true"
-    # on associe à la balise racine une deuxième sous balise language similaire avec des valeurs d'attribut différentes
-    langage2 = etree.SubElement(racine,"dcvalue", language="",qualifier="conversion", element="bitstream")
-    # on ajoute le texte true dans la balise langage 2
-    langage2.text = "true"
-    # on transforme la balise racine en un arbre XML
-    racine = etree.ElementTree(racine)
-    # on imprime l'arbre XML racine dans un fichier metadata.xml dans le dossier lot traité
-    if thematique:
-        for dir_them in os.listdir(dir):
-            racine.write(f'{dir}/{dir_them}/metadata_inserm.xml', encoding="utf-8")
-    else:
-        racine.write(dir + "/metadata_inserm.xml", encoding="utf-8")
+    for dir in os.listdir("Lots"):
+        dir = f'Lots/{dir}'
+        # on créé une balise XML racine nommé dublin_core avec pour attribut schema qui a une valeur inserm
+        racine = etree.Element("dublin_core", schema="inserm")
+        # on associe à cette balise une sous balise dc_value avec pour attribut language (valeur autocreation) et element
+        # (valeur lexicon)
+        langage1 = etree.SubElement(racine, "dcvalue", language="", qualifier="autocreation", element="lexicon")
+        # on ajoute le texte true encadrée par la balise language précédemment créée
+        langage1.text = "true"
+        # on associe à la balise racine une deuxième sous balise language similaire avec des valeurs d'attribut différentes
+        langage2 = etree.SubElement(racine, "dcvalue", language="", qualifier="conversion", element="bitstream")
+        # on ajoute le texte true dans la balise langage 2
+        langage2.text = "true"
+        # on transforme la balise racine en un arbre XML
+        racine = etree.ElementTree(racine)
+        # on imprime l'arbre XML racine dans un fichier metadata.xml dans le dossier lot traité
+        if thematique:
+            for dir_them in os.listdir(dir):
+                racine.write(f'{dir}/{dir_them}/metadata_inserm.xml', encoding="utf-8")
+        else:
+            racine.write(dir + "/metadata_inserm.xml", encoding="utf-8")
 
 
 def renommage_files(csv,coll):
@@ -91,7 +93,7 @@ def create_lots(df_line, thematique):
 
 
 
-def dispatch_files(csv, thematique, dispatchPDF, dispatchimgs):
+def dispatchfiles(csv, thematique, renamefiles, dispatchPDF, dispatchimgs):
     """
     fonction qui dispatch les PDF dans le lot correspondant
     :param csv: csv contenant les métadonnées des documents traités
@@ -102,16 +104,18 @@ def dispatch_files(csv, thematique, dispatchPDF, dispatchimgs):
         df_line = df.iloc[n]
         path = create_lots(df_line, thematique)
         if dispatchPDF:
-            print(" > Ajout des PDF dans le fichier item correspondant")
-            nom_pdf = df_line["nv_nom_pdf"]
-            nom_image = df_line["nom_pdf"]
+            if renamefiles:
+                nom_pdf = df_line["nv_nom_pdf"]
+            else:
+                nom_pdf=df_line['nom_pdf']
             try:
-                os.rename(f'PDF{nom_pdf}', f'{path}{nom_pdf}')
+                os.rename(f'PDF/{nom_pdf}', f'{path}/{nom_pdf}')
             except FileNotFoundError as e:
                 print(e)
                 print(f"Le fichier PDF{nom_pdf} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
         if dispatchimgs:
             print(" > Ajout des images jpg dans le fichier item correspondant")
+            nom_image = df_line["nom_pdf"]
             try:
                 os.rename(f'imgs/{nom_image[:-4]}.jpg',f'{path}/{nom_image[:-4]}.jpg')
             except FileNotFoundError as e:
@@ -141,11 +145,9 @@ def windows2unix(dir):
         open_file.write(content)
 
 
-def construction_content(dir,license):
+def construction_content(dir, license):
     """
     Fonction qui pour un dossier item donné construit le fichier content correspondant
-    :param dir: chemin vers le dossier
-    :return:
     """
     # pour chaque fichier du dossier
     for el in os.listdir(dir):
@@ -160,47 +162,51 @@ def construction_content(dir,license):
                 f.write(el + "\n")
         if license:
             with open(dir + "/contents", "a") as f:
-                f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
+                    f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
     # mobilisation de la fonction windows2unix qui permet d'encoder le fichier contents en unix
     windows2unix(dir)
 
 
-def creation_content(dir, license, thematique):
+def creation_content(license, thematique):
     """
     Fonction qui pour chaque dossier item construit le fichier content et l'ajoute au bon niveau de l'arborescence
-    :param dir: chemin vers le dossier lot
-    :type dir: str
     :param license: bool qui indique si la licence des comités d'histoire sera présente dans les lots
     :type license: bool
     :return: fichier content détaillant le contenu du lot
     """
-    if thematique:
-        for dir_item in os.listdir(dir):
-            construction_content(f'{dir}/{dir_item}',license)
-    else:
-        construction_content(dir,license)
+    for dir in os.listdir("Lots"):
+        dir = f'Lots/{dir}'
+        if thematique:
+            for dir_item in os.listdir(dir):
+                construction_content(f'{dir}/{dir_item}',license)
+        else:
+            construction_content(dir,license)
 
 
-def ajout_img(dir,thematique):
+def ajout_img(thematique):
     """
     Fonction qui ajoute la même image à chaque item
     """
-    if thematique:
-        for dir_them in os.listdir(dir):
-            shutil.copy("vignette.jpg", f'{dir}/{dir_them}/vignette.jpg')
-    else:
-        shutil.copy("vignette.jpg", f'{dir}/vignette.jpg')
+    for dir in os.listdir("Lots"):
+        dir = f'Lots/{dir}'
+        if thematique:
+            for dir_them in os.listdir(dir):
+                shutil.copy("vignette.jpg", f'{dir}/{dir_them}/vignette.jpg')
+        else:
+            shutil.copy("vignette.jpg", f'{dir}/vignette.jpg')
 
 
-def copy_license(dir,thematique):
+def copy_license(thematique):
     """
     Fonction qui ajoute la license à chaque item
     """
-    if thematique:
-        for dir_them in os.listdir(dir):
-            shutil.copy("license.txt", f'{dir}/{dir_them}/license.txt')
-    else:
-        shutil.copy("license.txt", f'{dir}/license.txt')
+    for dir in os.listdir("Lots"):
+        dir = f'Lots/{dir}'
+        if thematique:
+            for dir_them in os.listdir(dir):
+                shutil.copy("license.txt", f'{dir}/{dir_them}/license.txt')
+        else:
+            shutil.copy("license.txt", f'{dir}/license.txt')
 
 
 @click.command()
@@ -210,11 +216,11 @@ def copy_license(dir,thematique):
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
 @click.option("-p", "--pdf", "dispatchtexte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
 @click.option("-r", "--rename", "renamefiles", is_flag=True, default=False, help="si on veut renommer les fichiers")
-@click.option("-i", "--img","dispatchimages", is_flag=True, default=False, help="si on veut dispatcher des images")
 @click.option("-is","--imgsingle","dispatchimageseul",is_flag=True, default=False, help="si l'on veut ajouter la même vignette dans chaque lot")
+@click.option('-i', "--img", "dispatchimages", is_flag=True, default=False, help="si l'on veut ajouter une image précise dans certains/tous les lots")
 @click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
 @click.option("-m", "--metadata", "metadatacreation", is_flag=True, default=False, help="si l'on veut que le metadata_inserm soit ajouté")
-def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimages, dispatchimageseul, contentcreation, metadatacreation):
+def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimageseul, dispatchimages, contentcreation, metadatacreation):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
     :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
@@ -227,11 +233,13 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
     :param thematique: indication click si l'on souhaite la structuration des dossiers items en dossiers thématiques
     :param dispatchtexte: indication click si l'on souhaite dispatcher dans chaque lot le pdf correspondant
     :param renamefiles: indication click si l'on souhaite renommer les fichiers et items
-    :param dispatchimages: indication click si l'on souhaite dispatcher dans chaque lot une image différente
     :param dispatchimageseul: indication click si l'on souhaite ajouter la même image dans tous les lots
+    :param dispatchimages: indication click si l'on souhaite ajouter des images précises dans certains des lots
     :param contentcreation: indication click si l'on souhaite créer le content dans chaque lot
     :param metadatacreation: indication click si l'on souhaite créer un fichier metadata_inserm dans chaque lot
     """
+    if thematique:
+        print(" > Création de lots avec des thématiques")
     if renamefiles:
         if csv and coll:
         # on lance le renommage des fichiers avec la fonction renommage_files
@@ -247,37 +255,38 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
 
 
     if dispatchtexte or dispatchimages:
-        if csv and coll:
-            # on lance le renommage des fichiers avec la fonction renommage_files
-            print(" > Dispatchage des fichiers dans leur dossier item")
-            dispatch_files(csv, thematique,dispatchtexte, dispatchimages)
-        elif csv:
-            print("Il manque l'indication de collection pour dispatcher correctement les fichiers. Relancer la commande en "
+        if renamefiles:
+            if csv and coll:
+                # on lance le renommage des fichiers avec la fonction renommage_files
+                print(" > Dispatchage des fichiers dans leur dossier item")
+                dispatchfiles(csv, thematique,renamefiles, dispatchtexte, dispatchimages)
+            elif csv:
+                print("Il manque l'indication de collection pour dispatcher correctement les fichiers. Relancer la commande en "
                   "y ajoutant la collection traitée.")
-        elif coll:
-            print("Il manque le csv de métadonnées permettant de dispatcher les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
+            elif coll:
+                print("Il manque le csv de métadonnées permettant de dispatcher les fichiers. Consulter la procédure, préparer le tableur et relancer la commande.")
+            else:
+                print("Il manque l'indication de collection et le csv de métadonnées pour dispatcher correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
         else:
-            print("Il manque l'indication de collection et le csv de métadonnées pour dispatcher correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
+            print(" > Dispatchage des fichiers dans leur dossier item")
+            dispatchfiles(csv, thematique, renamefiles, dispatchtexte, dispatchimages)
 
 
-    # pour chaque lot dans le dossier
-    for dir in os.listdir("Lots"):
-        dir = f'Lots/{dir}'
         if dispatchimageseul:
             print(" > Ajout de la vignette unique")
-            ajout_img(dir, thematique)
+            ajout_img(thematique)
         # création du  fichier métadata en mobilisant la fonction creation_metadata
         if metadatacreation:
             print(" > Ajout des fichier metadata_inserm")
-            creation_metadata(dir, thematique)
+            creation_metadata( thematique)
         if contentcreation:
             print(" > Ajout des fichiers content")
             # création du fichier content en mobilisant la fonction creation_content
-            creation_content(dir, license, thematique)
+            creation_content(license, thematique)
         # Si une license est demandée, on l'ajoute dans chaque item
         if license:
             print(" > Ajout des licences")
-            copy_license(dir, thematique)
+            copy_license(thematique)
 
 
 if __name__ == "__main__":
