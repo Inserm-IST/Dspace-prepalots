@@ -18,7 +18,7 @@ Créer un csv contenant les métadonnées des fichiers à ajouter dans iPubli:
 	Pour créer le csv rapidement, employer le script python creationcsvdossier: python creationcsvdossier.py [Nom_Dossier_PDF]
 	Se référer au csv dans le dossier Exemple pour réaliser le reste du fichier csv:
 		- Ajouter une colonne item qui numérote les pdf à partir de 1
-		- Ajouter une colonne annee et une colonne mois
+		- Dans le cas d'un renommage des PDF: Ajouter une colonne annee et une colonne mois
 	Bien enregistrer le fichier en format csv avec comme caractères de séparation "," et l'ajouter dans le dossier de travail
 
 
@@ -35,7 +35,10 @@ Dans Anaconda prompt, naviguer jusqu'au dossier de travail: cd chemin/vers/le/do
 	Pour générer les lots sans options:
 		python prepalots.py [nom_du_csv] [nom_de_la_collection] 
 		Avec nom_du_csv: nom du fichier csv à traiter
-		     nom_de_la_collection: sera employé pour renommer les PDF. Exemple CP pour renommer les communiqués de presse...
+		     nom_de_la_collection:Exemple CP pour renommer les communiqués de presse
+
+	Pour générer des lots avec le renommage des PDF tel que Nomdelacollection_année_jour.PDF
+		python prepalots.py [nom_du_csv] [nom_de_la_collection] -r
 	
 	Pour générer les lots avec une licence (dans le cadre des comités histoire)
 		python prepalots.py [nom_du_csv] [nom_de_la_collection] -l
