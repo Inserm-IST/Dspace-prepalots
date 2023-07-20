@@ -1,5 +1,5 @@
-,item,nom_pdf,categorie,annee,mois,jour,nv_nom_pdf
-0,1,1997_01_08_CP_ExpCollHepatVirales.pdf,2017025501_1997,1997,1,8,/CR_1997_01_0001.pdf
-1,2,1997_02_00_CP_ExpCollOsteoporose.pdf,2017025501_1997,1997,2,0,/CR_1997_02_0002.pdf
-2,3,1997_06_20_CP_NeurobioSexuMasc.pdf,2017025501_1997,1997,6,20,/CR_1997_06_0003.pdf
-3,4,1997_10_14_CP_ExpCollGrandePremat.pdf,2017025501_1997,1997,10,14,/CR_1997_10_0004.pdf
+,item,nom_pdf,categorie,annee,mois,jour, Thématique
+0,1,1997_01_08_CP_ExpCollHepatVirales.pdf,2017025501_1997,1997,1,8,1997
+1,2,1997_02_00_CP_ExpCollOsteoporose.pdf,2017025501_1997,1997,2,0,1997
+2,3,1997_06_20_CP_NeurobioSexuMasc.pdf,2017025501_1997,1997,6,20,1997
+3,4,1997_10_14_CP_ExpCollGrandePremat.pdf,2017025501_1997,1997,10,14,1997
