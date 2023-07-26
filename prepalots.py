@@ -14,7 +14,7 @@ import pandas as pd
 import sys
 import shutil
 
-def creation_metadata(thematique):
+def creation_metadata(thematique,classementdate):
     """
     Fonction qui ajoute le fichier métadata au dossier traité
     :param dir: chemin vers le dossier lot
@@ -37,7 +37,7 @@ def creation_metadata(thematique):
         # on transforme la balise racine en un arbre XML
         racine = etree.ElementTree(racine)
         # on imprime l'arbre XML racine dans un fichier metadata.xml dans le dossier lot traité
-        if thematique:
+        if thematique or classementdate:
             for dir_them in os.listdir(dir):
                 racine.write(f'{dir}/{dir_them}/metadata_inserm.xml', encoding="utf-8")
         else:
@@ -78,11 +78,13 @@ def renommage_files(csv,coll):
     #on imprime la nouvelle colonne dans le fichier csv
     df.to_csv(csv)
 
-def create_lots(df_line, thematique):
+def create_lots(df_line, thematique,classementdate):
     """Fonction qui créé des lots pour import dans iPubli par la suite"""
     num_item = f'{df_line["item"]:04d}'
     if thematique:
         path = f'Lots/{df_line["Thématique"]}/item_{num_item}'
+    elif classementdate:
+        path=f'Lots/{df_line["Date de publication"]}/item{num_item}'
     else:
         path = f'Lots/item_{num_item}'
     isExist = os.path.exists(path)
@@ -93,7 +95,7 @@ def create_lots(df_line, thematique):
 
 
 
-def dispatchfiles(csv, thematique, renamefiles, dispatchPDF, dispatchimgs):
+def dispatchfiles(csv, thematique, classementdate, renamefiles, dispatchPDF, dispatchimgs):
 
     """
     fonction qui dispatch les PDF dans le lot correspondant
@@ -103,7 +105,7 @@ def dispatchfiles(csv, thematique, renamefiles, dispatchPDF, dispatchimgs):
     df = pd.read_csv(csv, sep=",")
     for n in range(len(df)):
         df_line = df.iloc[n]
-        path = create_lots(df_line, thematique)
+        path = create_lots(df_line, thematique,classementdate)
         if dispatchPDF:
             if renamefiles:
                 nom_pdf = df_line["nv_nom_pdf"]
@@ -169,7 +171,7 @@ def construction_content(dir, license):
     windows2unix(dir)
 
 
-def creation_content(license, thematique):
+def creation_content(license, thematique,classementdate):
     """
     Fonction qui pour chaque dossier item construit le fichier content et l'ajoute au bon niveau de l'arborescence
     :param license: bool qui indique si la licence des comités d'histoire sera présente dans les lots
@@ -178,33 +180,33 @@ def creation_content(license, thematique):
     """
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
-        if thematique:
+        if thematique or classementdate:
             for dir_item in os.listdir(dir):
                 construction_content(f'{dir}/{dir_item}',license)
         else:
             construction_content(dir,license)
 
 
-def ajout_img(thematique):
+def ajout_img(thematique,classementdate):
     """
     Fonction qui ajoute la même image à chaque item
     """
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
-        if thematique:
+        if thematique or classementdate:
             for dir_them in os.listdir(dir):
                 shutil.copy("vignette.jpg", f'{dir}/{dir_them}/vignette.jpg')
         else:
             shutil.copy("vignette.jpg", f'{dir}/vignette.jpg')
 
 
-def copy_license(thematique):
+def copy_license(thematique,classementdate):
     """
     Fonction qui ajoute la license à chaque item
     """
     for dir in os.listdir("Lots"):
         dir = f'Lots/{dir}'
-        if thematique:
+        if thematique or classementdate:
             for dir_them in os.listdir(dir):
                 shutil.copy("license.txt", f'{dir}/{dir_them}/license.txt')
         else:
@@ -216,13 +218,14 @@ def copy_license(thematique):
 @click.option("--csv", type=str)
 @click.option("-l","--lic","license", is_flag=True, default=False, help="Ajout de la license du Comité Histoire")
 @click.option("-t", "--them", "thematique", is_flag=True, default=False, help="si création avec dossier thématique")
+@click.option("-d","--date", "classementdate",is_flag=True, default=False, help="si création avec dossier date")
 @click.option("-p", "--pdf", "dispatchtexte", is_flag=True, default=False, help="si on veut dispatcher des pdf")
 @click.option("-r", "--rename", "renamefiles", is_flag=True, default=False, help="si on veut renommer les fichiers")
 @click.option("-is","--imgsingle","dispatchimageseul",is_flag=True, default=False, help="si l'on veut ajouter la même vignette dans chaque lot")
 @click.option('-i', "--img", "dispatchimages", is_flag=True, default=False, help="si l'on veut ajouter une image précise dans certains/tous les lots")
 @click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
 @click.option("-m", "--metadata", "metadatacreation", is_flag=True, default=False, help="si l'on veut que le metadata_inserm soit ajouté")
-def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, dispatchimageseul, dispatchimages, contentcreation, metadatacreation):
+def automate_file(csv,coll,license, thematique, classementdate, dispatchtexte, renamefiles, dispatchimageseul, dispatchimages, contentcreation, metadatacreation):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
     :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
@@ -242,6 +245,8 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
     """
     if thematique:
         print(" > Création de lots avec des thématiques")
+    if classementdate:
+        print(" > Création de lots avec des dossiers date")
     if renamefiles:
         if csv and coll:
         # on lance le renommage des fichiers avec la fonction renommage_files
@@ -260,7 +265,7 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
             if csv and coll:
                 # on lance le renommage des fichiers avec la fonction renommage_files
                 print(" > Dispatchage des fichiers dans leur dossier item")
-                dispatchfiles(csv, thematique,renamefiles, dispatchtexte, dispatchimages)
+                dispatchfiles(csv, thematique,classementdate,renamefiles, dispatchtexte, dispatchimages)
             elif csv:
                 print("Il manque l'indication de collection pour dispatcher correctement les fichiers. Relancer la commande en "
                   "y ajoutant la collection traitée.")
@@ -270,24 +275,24 @@ def automate_file(csv,coll,license, thematique, dispatchtexte, renamefiles, disp
                 print("Il manque l'indication de collection et le csv de métadonnées pour dispatcher correctement les fichiers. Consulter la procédure, préparer le programme et relancer la commande")
         else:
             print(" > Dispatchage des fichiers dans leur dossier item")
-            dispatchfiles(csv, thematique, renamefiles, dispatchtexte, dispatchimages)
+            dispatchfiles(csv, thematique, classementdate, renamefiles, dispatchtexte, dispatchimages)
 
 
         if dispatchimageseul:
             print(" > Ajout de la vignette unique")
-            ajout_img(thematique)
+            ajout_img(thematique,classementdate)
         # création du  fichier métadata en mobilisant la fonction creation_metadata
         if metadatacreation:
             print(" > Ajout des fichier metadata_inserm")
-            creation_metadata( thematique)
+            creation_metadata(thematique,classementdate)
         if contentcreation:
             print(" > Ajout des fichiers content")
             # création du fichier content en mobilisant la fonction creation_content
-            creation_content(license, thematique)
+            creation_content(license, thematique,classementdate)
         # Si une license est demandée, on l'ajoute dans chaque item
         if license:
-            print(" > Ajout des licences")
-            copy_license(thematique)
+            print(" > Ajout des licences du Comité Histoire")
+            copy_license(thematique,classementdate)
 
 
 if __name__ == "__main__":
