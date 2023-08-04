@@ -84,7 +84,7 @@ def create_lots(df_line, thematique,classementdate):
     if thematique:
         path = f'Lots/{df_line["Thématique"]}/item_{num_item}'
     elif classementdate:
-        path=f'Lots/{df_line["Date de publication"]}/item{num_item}'
+        path=f'Lots/{df_line["Date de publication"]}/item_{num_item}'
     else:
         path = f'Lots/item_{num_item}'
     isExist = os.path.exists(path)
