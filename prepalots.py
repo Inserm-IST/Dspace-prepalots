@@ -149,7 +149,7 @@ def windows2unix(dir):
         open_file.write(content)
 
 
-def construction_content(dir, license):
+def construction_content(dir, license,dispatchimageseul):
     """
     Fonction qui pour un dossier item donné construit le fichier content correspondant
     """
@@ -162,16 +162,18 @@ def construction_content(dir, license):
                 # on ajoute le nom du fichier avec sa description
                 f.write(el + "\t\tbundle:ORIGINAL\t\tdescription:Lire l'article PDF\n")
         elif "jpg" in el or "jpeg" in el or "png" in el:
-            with open(dir + "/contents", "a") as f:
-                f.write(el + "\n")
+            if dispatchimageseul:
+                with open(dir + "/contents", "a") as f:
+                    f.write(el + "\t\tbundle:THUMBNAIL\t\tdescription:Vignette\n")
         if license:
             with open(dir + "/contents", "a") as f:
-                    f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
+                f.write("license.txt\t\tbundle: LICENSE\t\tdc.title: license.txt\n")
+
     # mobilisation de la fonction windows2unix qui permet d'encoder le fichier contents en unix
     windows2unix(dir)
 
 
-def creation_content(license, thematique,classementdate):
+def creation_content(license, thematique,classementdate,dispatchimageseul):
     """
     Fonction qui pour chaque dossier item construit le fichier content et l'ajoute au bon niveau de l'arborescence
     :param license: bool qui indique si la licence des comités d'histoire sera présente dans les lots
@@ -182,9 +184,9 @@ def creation_content(license, thematique,classementdate):
         dir = f'Lots/{dir}'
         if thematique or classementdate:
             for dir_item in os.listdir(dir):
-                construction_content(f'{dir}/{dir_item}',license)
+                construction_content(f'{dir}/{dir_item}',license,dispatchimageseul)
         else:
-            construction_content(dir,license)
+            construction_content(dir,license,dispatchimageseul)
 
 
 def ajout_img(thematique,classementdate):
@@ -288,7 +290,7 @@ def automate_file(csv,coll,license, thematique, classementdate, dispatchtexte, r
         if contentcreation:
             print(" > Ajout des fichiers content")
             # création du fichier content en mobilisant la fonction creation_content
-            creation_content(license, thematique,classementdate)
+            creation_content(license, thematique,classementdate,dispatchimageseul)
         # Si une license est demandée, on l'ajoute dans chaque item
         if license:
             print(" > Ajout des licences du Comité Histoire")
