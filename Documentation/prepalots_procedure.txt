@@ -20,7 +20,7 @@ Ajouter dans le dossier de travail le dossier contenant les fichiers à dispatch
 Si l'on souhaite dispatcher des PDF et/ou des images dans les lots, il est nécessaire de créer un csv:
 Créer un csv contenant les métadonnées des fichiers à ajouter dans iPubli:
 	Chaque ligne correspond aux métadonnées d'un fichier et chaque colonne à un type de métadonnées.
-	Pour créer le csv rapidement, employer le script python creationcsvdossier: python creationcsvdossier.py [Nom_Dossier_PDF] (utilisable dans le cas des Communiqués de presse uniquement pour le moment)
+	Pour créer le csv rapidement, employer le script python creationcsvdossier. Si les PDF se trouvent dans un dossier sans sous dossiers: python creationcsvdossier [NOM du dossier], si les pdf sont triés en sous dossiers: python creationcsvdossier [nom du dossier] -t . Le csv est créé sous le nom pdf.csv.
 	Se référer au csv dans le dossier Exemple pour réaliser le reste du fichier csv:
 		- Ajouter une colonne item qui numérote les pdf à partir de 1
 
