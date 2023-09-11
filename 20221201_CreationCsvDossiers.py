@@ -6,7 +6,8 @@ import click
 
 @click.command()
 @click.argument("dossier", type=str)
-def get_pdf(dossier):
+@click.option("-t","--them","thematique",is_flag=True, default=False, help="Si sous dossiers")
+def get_pdf(dossier,thematique):
     """
     Fonction qui récupère les noms des différents PDF et les ajoute dans un csv
     :param dossier: nom du chemin vers les PDF
@@ -17,12 +18,20 @@ def get_pdf(dossier):
     liste_pdf = []
     num_item = 0
     num_liste = []
-    for dir in os.listdir(dossier):
-        pdf = os.listdir(f'{dossier}/{dir}')
+    if thematique:
+        for dir in os.listdir(dossier):
+            pdf = os.listdir(f'{dossier}/{dir}')
+            for el in pdf:
+                if 'pdf' in el:
+                    liste_dir.append(dir)
+                    liste_pdf.append(el)
+                    num_item += 1
+                    num_liste.append(num_item)
+    else:
+        pdf = os.listdir(f'{dossier}')
         for el in pdf:
-            print(el)
             if 'pdf' in el:
-                liste_dir.append(dir)
+                liste_dir.append(dossier)
                 liste_pdf.append(el)
                 num_item += 1
                 num_liste.append(num_item)
