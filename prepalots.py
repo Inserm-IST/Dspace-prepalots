@@ -126,6 +126,45 @@ def dispatchfiles(csv, thematique, classementdate, renamefiles, dispatchPDF, dis
                 print(f"Le fichier images {nom_image[:-4]}.jpg n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
 
 
+def dispatchXML():
+    """
+    Fonction qui dispatch les XML nommés avec leur numéro dans le titre dans les lots correspondants
+    :return:
+    """
+    isExist = os.path.exists("Lots/")
+    if not isExist:
+        os.makedirs("Lots/")
+    for xml in os.listdir("XML"):
+        num_item = f'{xml[-8:-4]}'
+        isExist = os.path.exists(f'Lots/item_{num_item}')
+        if not isExist:
+            os.makedirs(f'Lots/item_{num_item}')
+        try:
+            os.rename(f'XML/{xml}',f'Lots/item_{num_item}/{xml}')
+        except FileNotFoundError as e:
+            print(e)
+            print(f"Le fichier XML {xml} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
+
+
+def dispatchPDF():
+    """
+    Fonction qui dispatche des PDF et XML nommés avec leur numéro d'item dans le titre dans les lots correspondants.
+    :return:
+    """
+    isExist = os.path.exists("Lots/")
+    if not isExist:
+        os.makedirs("Lots/")
+    for pdf in os.listdir("PDF"):
+        num_item = f'{pdf[-8:-4]}'
+        isExist = os.path.exists(f'Lots/item_{num_item}')
+        if not isExist:
+            os.makedirs(f'Lots/item_{num_item}')
+        try:
+            os.rename(f'PDF/{pdf}',f'Lots/item_{num_item}/{pdf}')
+        except FileNotFoundError as e:
+            print(e)
+            print(f"Le fichier PDF {pdf} n'existe pas ou a déjà été déplacé dans le fichier item correspondant.")
+
 
 def windows2unix(dir):
     """
@@ -227,7 +266,8 @@ def copy_license(thematique,classementdate):
 @click.option('-i', "--img", "dispatchimages", is_flag=True, default=False, help="si l'on veut ajouter une image précise dans certains/tous les lots")
 @click.option("-c", "--content", "contentcreation", is_flag=True, default=False, help="si on veut que le content soit créé")
 @click.option("-m", "--metadata", "metadatacreation", is_flag=True, default=False, help="si l'on veut que le metadata_inserm soit ajouté")
-def automate_file(csv,coll,license, thematique, classementdate, dispatchtexte, renamefiles, dispatchimageseul, dispatchimages, contentcreation, metadatacreation):
+@click.option("-ls", "--lotsimples", "dispatchlotsimple", is_flag=True, default=False, help="si l'on veut dispatcher des PDF et XML dont le numéro est dans le nom exemple magazine")
+def automate_file(csv,coll,license, thematique, classementdate, dispatchtexte, renamefiles, dispatchimageseul, dispatchimages, contentcreation, metadatacreation, dispatchlotsimple):
     """
     Script qui permet la construction d'un lot de document pour import dans Dspace
     :param csv: tableur contenant les métadonnées nécessaires à la construction des lots (pour chaque document: nom du pdf,
@@ -244,6 +284,7 @@ def automate_file(csv,coll,license, thematique, classementdate, dispatchtexte, r
     :param dispatchimages: indication click si l'on souhaite ajouter des images précises dans certains des lots
     :param contentcreation: indication click si l'on souhaite créer le content dans chaque lot
     :param metadatacreation: indication click si l'on souhaite créer un fichier metadata_inserm dans chaque lot
+    :param dispatchlotsimple: indication click si l'on souhaite dispatcher dans chaque lot les pdf et xml correspondant numérotés dans leur titre (pour le magazine)
     """
     if thematique:
         print(" > Création de lots avec des thématiques")
@@ -280,21 +321,28 @@ def automate_file(csv,coll,license, thematique, classementdate, dispatchtexte, r
             dispatchfiles(csv, thematique, classementdate, renamefiles, dispatchtexte, dispatchimages)
 
 
-        if dispatchimageseul:
-            print(" > Ajout de la vignette unique")
-            ajout_img(thematique,classementdate)
-        # création du  fichier métadata en mobilisant la fonction creation_metadata
-        if metadatacreation:
-            print(" > Ajout des fichier metadata_inserm")
-            creation_metadata(thematique,classementdate)
-        if contentcreation:
-            print(" > Ajout des fichiers content")
-            # création du fichier content en mobilisant la fonction creation_content
-            creation_content(license, thematique,classementdate,dispatchimageseul)
-        # Si une license est demandée, on l'ajoute dans chaque item
-        if license:
-            print(" > Ajout des licences du Comité Histoire")
-            copy_license(thematique,classementdate)
+    if dispatchimageseul:
+        print(" > Ajout de la vignette unique")
+        ajout_img(thematique,classementdate)
+
+    if dispatchlotsimple:
+        print(" > Ajout des PDF et XML du magazine dans les lots correspondants")
+        dispatchPDF()
+        dispatchXML()
+
+    # création du  fichier métadata en mobilisant la fonction creation_metadata
+    if metadatacreation:
+        print(" > Ajout des fichier metadata_inserm")
+        creation_metadata(thematique, classementdate)
+    if contentcreation:
+        print(" > Ajout des fichiers content")
+        # création du fichier content en mobilisant la fonction creation_content
+        creation_content(license, thematique, classementdate, dispatchimageseul)
+    # Si une license est demandée, on l'ajoute dans chaque item
+    if license:
+        print(" > Ajout des licences du Comité Histoire")
+        copy_license(thematique, classementdate)
+
 
 
 if __name__ == "__main__":
